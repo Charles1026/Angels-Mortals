@@ -1,3 +1,6 @@
 [submodule "3rd-party/tgbot-cpp"]
 	path = 3rd-party/tgbot-cpp
 	url = https://github.com/reo7sp/tgbot-cpp.git
+[submodule "3rd-party/json"]
+	path = 3rd-party/json
+	url = https://github.com/nlohmann/json.git
