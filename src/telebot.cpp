@@ -91,7 +91,7 @@ void TeleBot::setCommandMessageCallback() {
     auto username = msgPtr->from->username;
     msgPtr->chat;
     auto chatId = msgPtr->chat->id;
-    if (!m_participants->setParticipantChatId(uid, username, chatId, m_isAngel, !m_isAngel ? "" : msgPtr->from->username)) {
+    if (!m_participants->setParticipantChatId(uid, username, chatId, m_isAngel, m_isAngel ? msgPtr->from->username: "")) {
       respondToMessage(msgPtr, ERROR_STARTING_MESSAGE);
       return;
     }
