@@ -1,15 +1,21 @@
 #include "anm/participant_manager.h"
 #include <cstdint>
 #include <fstream>
-#include <iostream>
 
 #include <spdlog/spdlog.h>
 
-/**
- * @brief functions to convert json to ParticipantManger via nlohmann.
- * 
- */
 namespace AnM {
+std::ostream& operator<<(std::ostream& os, const Participant& participant) {
+  os << "id: " << participant.id << '\n';
+  os << "angelId: " << participant.angelId << '\n';
+  os << "angelChatId: " << participant.angelChatId << '\n';
+  os << "mortalId: " << participant.mortalId << '\n';
+  os << "mortalChatId: " << participant.mortalChatId << '\n';
+  os << "mortalUsername: " << participant.mortalUsername;
+  return os;
+}
+  
+  
   NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AnM::Participant, id, angelId, angelChatId, mortalId, mortalChatId, mortalUsername)
 
   void from_json(const nlohmann::json& json, AnM::ParticipantManager& manager) {
@@ -23,6 +29,7 @@ namespace AnM {
   void to_json(nlohmann::json& json, AnM::ParticipantManager& manager) {
     std::size_t ptr = 0;
     for (auto& element : manager.m_participantsMap) {
+      // std::cout << element.second << std::endl;
       to_json(json[ptr], element.second);
       ptr++;
     }
@@ -43,7 +50,7 @@ namespace AnM {
     }
   }
 
-  void ParticipantManager::saveData() {
+  ParticipantManager::~ParticipantManager() {
     try {
       nlohmann::json jsonObject;
       to_json(jsonObject, *this);

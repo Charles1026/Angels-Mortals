@@ -53,3 +53,26 @@ target_link_libraries(angels_and_mortals_exec
 PUBLIC
   strix::anm
 )
+
+
+
+add_executable(generate_pairings_exec
+  generate_pairings.cpp
+)
+
+include_directories(generate_pairings_exec
+PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+
+target_compile_features(generate_pairings_exec
+PUBLIC
+  cxx_std_20
+)
+
+target_link_libraries(generate_pairings_exec
+PUBLIC
+  strix::anm
+  nlohmann_json::nlohmann_json
+  spdlog::spdlog
+)

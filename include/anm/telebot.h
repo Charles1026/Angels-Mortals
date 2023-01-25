@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 #include <string>
 
 #include <tgbot/Bot.h>
@@ -13,12 +14,13 @@ namespace AnM {
 enum class SendMessageResponse {
   OK,
   UNREGISTERED_RECIPIENT,
-  UNSUPPORTED_MESSAGE_FORMAT
+  UNSUPPORTED_MESSAGE_FORMAT,
+  NOT_DATACHANNEL_MESSAGE,
 };
 
 class TeleBot {
   public:
-    TeleBot(const std::string& token, bool isAngel, const ParticipantManager& participants);
+    TeleBot(const std::string& token, bool isAngel, std::shared_ptr<ParticipantManager> participants, std::int64_t dataChannelId);
 
     void setForwardNormalMessageCallback(const std::function<SendMessageResponse(TgBot::Message::Ptr)>& callbackFn);
 
@@ -33,13 +35,16 @@ class TeleBot {
 
     void respondToMessage(const TgBot::Message::Ptr& msgPtr, const std::string& response);
 
+    SendMessageResponse handleDataChannelMessage(TgBot::Message::Ptr msgPtr);
+
   private:
-    const bool m_isAngel;
+    const bool m_isAngel {true};
+    const std::int64_t m_dataChannelId;
 
     TgBot::Bot m_bot;
     TgBot::TgLongPoll m_poller;
 
-    ParticipantManager m_participants;
+    std::shared_ptr<ParticipantManager> m_participants {nullptr};
 
     std::function<void(TgBot::Message::Ptr)> m_normalMessageCallback;
     std::function<void(TgBot::Message::Ptr)> m_startCommandCallback;

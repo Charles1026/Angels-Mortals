@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <functional>
+#include <memory>
 #include <string>
 #include <thread>
 
@@ -13,13 +14,13 @@ namespace AnM {
 class BotServer {
 
 public:
-  BotServer(const std::string& angelToken, const std::string& botToken, const std::string& pathToParticipantsJson);
+  BotServer(const std::string& angelToken, const std::string& botToken, const std::string& pathToParticipantsJson, std::int64_t dataChannelId);
   ~BotServer();
 
   void startPolling();
 
 private:
-  ParticipantManager m_participantManager;
+  std::shared_ptr<ParticipantManager> m_participantManager;
   TeleBot m_angelBot;
   TeleBot m_mortalBot;
 

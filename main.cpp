@@ -15,7 +15,7 @@ void termHandler(int dummy) {
 }
 
 int main(int argc, char *argv[]) {
-  AnM::BotServer server(ANGEL_TOKEN, MORTAL_TOKEN, "participants.json");
+  AnM::BotServer server(ANGEL_TOKEN, MORTAL_TOKEN, "participants.json", -1001861203201);
   server.startPolling();
 
   signal(SIGINT, termHandler);

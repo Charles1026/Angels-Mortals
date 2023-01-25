@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 
@@ -20,13 +21,14 @@ struct Participant{
 
   std::string mortalUsername{""};
 };
+std::ostream& operator<<(std::ostream& os, const Participant& participant);
 
 class ParticipantManager {
 
   public:
     ParticipantManager(const std::string& pathToParticipantsJson);
-    
-    void saveData();
+
+    ~ParticipantManager();
 
     bool addParticipant(Participant participant);
 

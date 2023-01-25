@@ -1,11 +1,15 @@
 #include "anm/server.h"
 
+#include <memory>
+
 #include <spdlog/spdlog.h>
 
 namespace AnM {
-  BotServer::BotServer(const std::string& angelToken, const std::string& mortalToken, const std::string& pathToParticipantsJson) 
-      : m_participantManager(pathToParticipantsJson), m_angelBot(angelToken, true, m_participantManager),
-        m_mortalBot(mortalToken, false, m_participantManager) {
+  BotServer::BotServer(const std::string& angelToken, const std::string& mortalToken, const std::string& pathToParticipantsJson, 
+      std::int64_t dataChannelId)
+      : m_participantManager(std::make_shared<ParticipantManager>(pathToParticipantsJson)), 
+        m_angelBot(angelToken, true, m_participantManager, dataChannelId), 
+        m_mortalBot(mortalToken, false, m_participantManager, dataChannelId) {
 
     m_angelNormalCallback = [&](TgBot::Message::Ptr msgPtr){
       return m_mortalBot.sendMessageToRecipient(msgPtr);
@@ -18,8 +22,6 @@ namespace AnM {
     m_mortalBot.setForwardNormalMessageCallback(m_mortalNormalCallback);
 
     spdlog::info("Successfully Set normal message callbacks for both bots.");
-
-
   }
 
   BotServer::~BotServer() {
@@ -32,8 +34,6 @@ namespace AnM {
       m_mortalThread.join();
     }
     spdlog::info("Stopped polling for both bots.");
-
-    m_participantManager.saveData();
   }
 
 
