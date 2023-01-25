@@ -74,16 +74,17 @@ void TeleBot::poll() {
 
 const inline std::string START_COMMAND = "start";
 const inline std::string GROUP_COMMAND = "group";
-const inline std::string ERROR_STARTING_MESSAGE = "Error,  please try again and contact House Comm if the problem persists.";
+const inline std::string ERROR_STARTING_MESSAGE = "Error, please try again and contact House Comm if the problem persists.";
 const inline std::string SUCCESS_STARTING_MESSAGE = "Successfully started, you may now start messaging.";
 
 void TeleBot::setCommandMessageCallback() {
   m_startCommandCallback = [&](const TgBot::Message::Ptr& msgPtr){
     if (!ensureMessageIsPrivateMessage(msgPtr)) return;
     auto uid = msgPtr->from->id;
+    auto username = msgPtr->from->username;
     msgPtr->chat;
     auto chatId = msgPtr->chat->id;
-    if (!m_participants->setParticipantChatId(uid, chatId, m_isAngel, m_isAngel ? "" : msgPtr->from->username)) {
+    if (!m_participants->setParticipantChatId(uid, username, chatId, m_isAngel, !m_isAngel ? "" : msgPtr->from->username)) {
       respondToMessage(msgPtr, ERROR_STARTING_MESSAGE);
       return;
     }

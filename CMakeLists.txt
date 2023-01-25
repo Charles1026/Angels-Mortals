@@ -52,6 +52,8 @@ PUBLIC
 target_link_libraries(angels_and_mortals_exec
 PUBLIC
   strix::anm
+  nlohmann_json::nlohmann_json
+  spdlog::spdlog
 )
 
 
