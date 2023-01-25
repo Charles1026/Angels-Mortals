@@ -35,6 +35,8 @@ class ParticipantManager {
 
     bool setParticipantChatId(std::int64_t participantId, const std::string& username, std::int64_t chatId, bool isAngelBot, const std::string& mortalUsername = "");
 
+    std::string getAngelOrMortalUsername(std::int64_t participantId, bool lookingForAngel) const;
+
     std::int64_t getAngelOrMortalId(std::int64_t participantId, bool lookingForAngel) const;
 
     std::int64_t getAngelOrMortalChatId(std::int64_t participantId, bool lookingForAngel) const;

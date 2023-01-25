@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
   }
   
   AnM::BotServer server(jsonObject.at("angelToken"), jsonObject.at("mortalToken"), 
-      jsonObject.at("pathToParticipantsFile"), jsonObject.at("dataChannelId"));
+      jsonObject.at("pathToParticipantsFile"), jsonObject.at("dataChannelId"), jsonObject.at("mainGroupId"));
   server.startPolling();
 
   signal(SIGINT, termHandler);

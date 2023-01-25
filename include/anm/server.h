@@ -14,7 +14,8 @@ namespace AnM {
 class BotServer {
 
 public:
-  BotServer(const std::string& angelToken, const std::string& botToken, const std::string& pathToParticipantsJson, std::int64_t dataChannelId);
+  BotServer(const std::string& angelToken, const std::string& botToken, const std::string& pathToParticipantsJson, 
+      std::int64_t dataChannelId, std::int64_t groupId);
   ~BotServer();
 
   void startPolling();

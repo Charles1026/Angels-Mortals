@@ -12,8 +12,10 @@ namespace AnM {
 constexpr std::int32_t OFFSET = 1000;
 constexpr std::int32_t TIMEOUT = 1;
 
-TeleBot::TeleBot(const std::string& token, bool isAngel, std::shared_ptr<ParticipantManager> participants, std::int64_t dataChannelId) 
-    : m_isAngel(isAngel), m_bot(token), m_poller(m_bot), m_participants(participants), m_dataChannelId(dataChannelId) {
+TeleBot::TeleBot(const std::string& token, bool isAngel, std::shared_ptr<ParticipantManager> participants, 
+    std::int64_t dataChannelId, std::int64_t groupId) 
+    : m_isAngel(isAngel), m_bot(token), m_poller(m_bot), m_participants(participants), 
+      m_dataChannelId(dataChannelId), m_groupId(groupId) {
   m_bot.getApi().getUpdates(OFFSET, 100, TIMEOUT);
   spdlog::info("{} Bot cleared pending updates.", m_isAngel ? "Angel" : "Mortal");
   setCommandMessageCallback();
@@ -74,8 +76,13 @@ void TeleBot::poll() {
 
 const inline std::string START_COMMAND = "start";
 const inline std::string GROUP_COMMAND = "group";
+const inline std::string WHO_COMMAND = "who";
 const inline std::string ERROR_STARTING_MESSAGE = "Error, please try again and contact House Comm if the problem persists.";
 const inline std::string SUCCESS_STARTING_MESSAGE = "Successfully started, you may now start messaging.";
+const inline std::string ERROR_SENDING_GROUP_MESSAGE = "Please reply to the message you want to send to the group.";
+const inline std::string SUCCESS_SENDING_GROUP_MESSAGE = "Successfully sent message to group.";
+const inline std::string WHO_ANGEL_RESPONSE_MESSAGE = "Whoops, you cant know your angel yet";
+const inline std::string WHO_MORTAL_RESPONSE_MESSAGE = "Your mortal is @";
 
 void TeleBot::setCommandMessageCallback() {
   m_startCommandCallback = [&](const TgBot::Message::Ptr& msgPtr){
@@ -92,10 +99,55 @@ void TeleBot::setCommandMessageCallback() {
   };
   m_bot.getEvents().onCommand(START_COMMAND, m_startCommandCallback);
 
+
   m_groupCommandCallback = [&](TgBot::Message::Ptr msgPtr){
-    //TODO
+    if (!ensureMessageIsPrivateMessage(msgPtr)) return;
+    if (!msgPtr->replyToMessage) {
+      respondToMessage(msgPtr, ERROR_SENDING_GROUP_MESSAGE);
+      return;
+    }
+    auto originalMsgPtr = msgPtr->replyToMessage;
+    std::string recipient = m_participants->getAngelOrMortalUsername(msgPtr->from->id, m_isAngel);
+    std::string header = "@" + recipient + " your " + (m_isAngel ? "mortal" : "angel") + " has a message for you\n";
+    std::string caption = originalMsgPtr->caption.empty() ? header : header + originalMsgPtr->caption;
+
+    TgBot::Api api = m_bot.getApi();
+    if (!originalMsgPtr->text.empty()) {
+      api.sendMessage(m_groupId, caption + originalMsgPtr->text);
+    } else if (originalMsgPtr->sticker) {
+      api.sendSticker(m_groupId, originalMsgPtr->sticker->fileId);
+    } else if (originalMsgPtr->animation) {
+      auto animation = originalMsgPtr->animation;
+      api.sendAnimation(m_groupId, animation->fileId, animation->duration, animation->width, animation->height, 
+          "", caption);
+    } else if (originalMsgPtr->audio) {
+      api.sendAudio(m_groupId, originalMsgPtr->audio->fileId, caption);
+    } else if (originalMsgPtr->document) {
+      api.sendDocument(m_groupId, originalMsgPtr->document->fileId, "", caption);
+    } else if (!originalMsgPtr->photo.empty()) {
+        api.sendPhoto(m_groupId, originalMsgPtr->photo.back()->fileId, caption);
+    } else if (originalMsgPtr->video) {
+      auto video = originalMsgPtr->video;
+      api.sendVideo(m_groupId, video->fileId, false, video->duration, video->width, 
+          video->height, "", caption);
+    } else if (originalMsgPtr->voice) {
+      api.sendVoice(m_groupId, originalMsgPtr->voice->fileId, caption);
+    } else {
+      respondToMessage(originalMsgPtr, UNSUPPORTED_MESSAGE_FORMAT_RESPONSE);
+      return;
+    }
+    respondToMessage(originalMsgPtr, SUCCESS_SENDING_GROUP_MESSAGE);
   };
   m_bot.getEvents().onCommand(GROUP_COMMAND, m_groupCommandCallback);
+
+  m_whoCommandCallback = [&](TgBot::Message::Ptr msgPtr){
+    if (m_isAngel) {
+      respondToMessage(msgPtr, WHO_ANGEL_RESPONSE_MESSAGE);
+      return;
+    }
+    respondToMessage(msgPtr, WHO_MORTAL_RESPONSE_MESSAGE + m_participants->getAngelOrMortalUsername(msgPtr->from->id, m_isAngel));
+  };
+  m_bot.getEvents().onCommand(WHO_COMMAND, m_whoCommandCallback);
 }
 
 
@@ -103,6 +155,7 @@ const inline std::string SENDING_MSG_IN_NON_DM_REPLY = "Error, please only commu
 
 bool TeleBot::ensureMessageIsPrivateMessage(TgBot::Message::Ptr msgPtr) {
   if (msgPtr->chat->type != TgBot::Chat::Type::Private) {
+    spdlog::info(msgPtr->chat->id);
     m_bot.getApi().sendMessage(msgPtr->chat->id, SENDING_MSG_IN_NON_DM_REPLY, false, msgPtr->messageId);
     return false;
   }
@@ -150,5 +203,4 @@ SendMessageResponse TeleBot::handleDataChannelMessage(TgBot::Message::Ptr msgPtr
   }
   return SendMessageResponse::OK;
 }
-
 }
