@@ -13,7 +13,7 @@ const inline std::int64_t PARTICIPANT_INVALID_VALUE = -1;
 struct Participant{
   std::int64_t id{PARTICIPANT_INVALID_VALUE};
   std::string username{""};
-  
+
   std::int64_t angelId{PARTICIPANT_INVALID_VALUE};
   std::int64_t angelChatId{PARTICIPANT_INVALID_VALUE};
 
@@ -33,7 +33,9 @@ class ParticipantManager {
 
     bool addParticipant(Participant participant);
 
-    bool setParticipantChatId(std::int64_t participantId, std::int64_t chatId, bool isAngelBot, const std::string& mortalUsername = "");
+    bool setParticipantChatId(std::int64_t participantId, const std::string& username, std::int64_t chatId, bool isAngelBot, const std::string& mortalUsername = "");
+
+    std::string getAngelOrMortalUsername(std::int64_t participantId, bool lookingForAngel) const;
 
     std::int64_t getAngelOrMortalId(std::int64_t participantId, bool lookingForAngel) const;
 

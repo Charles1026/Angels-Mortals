@@ -17,7 +17,7 @@ std::ostream& operator<<(std::ostream& os, const Participant& participant) {
 }
   
   
-  NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AnM::Participant, id, angelId, angelChatId, mortalId, mortalChatId, mortalUsername, username)
+  NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AnM::Participant, id, username, angelId, angelChatId, mortalId, mortalChatId, mortalUsername)
 
   void from_json(const nlohmann::json& json, AnM::ParticipantManager& manager) {
     for (auto& element : json) {
@@ -77,13 +77,15 @@ std::ostream& operator<<(std::ostream& os, const Participant& participant) {
     return true;
   }
 
-  bool ParticipantManager::setParticipantChatId(std::int64_t participantId, std::int64_t chatId, bool isAngelBot, const std::string& mortalUsername) {
+  bool ParticipantManager::setParticipantChatId(std::int64_t participantId, const std::string& username, std::int64_t chatId, 
+      bool isAngelBot, const std::string& mortalUsername) {
     auto participantIter = m_participantsMap.find(participantId);
     if (participantIter == m_participantsMap.end()) {
       spdlog::warn("Warning, attempt to set participant chat Id of non-existing participant: {}", participantId);
       return false;
     }
     Participant participant = participantIter->second;
+    participantIter->second.username = username;
     std::int64_t senderId = isAngelBot ? participant.angelId : participant.mortalId;
     auto senderIter = m_participantsMap.find(senderId);
     if (senderIter == m_participantsMap.end()) {
@@ -99,6 +101,21 @@ std::ostream& operator<<(std::ostream& os, const Participant& participant) {
     return true;
   }
 
+  std::string ParticipantManager::getAngelOrMortalUsername(std::int64_t participantId, bool lookingForAngel) const {
+    auto iter = m_participantsMap.find(participantId);
+    if (iter == m_participantsMap.end()) {
+      spdlog::warn("Cannot Find participant with id: {}", participantId);
+      return "";
+    }
+    Participant participant = iter->second;
+    std::int64_t targetId = lookingForAngel ? participant.angelId : participant.mortalId;
+    auto targetIter = m_participantsMap.find(targetId);
+    if (targetIter == m_participantsMap.end()) {
+      spdlog::warn("Cannot Find recipient with id: {}", targetId);
+      return "";
+    }
+    return targetIter->second.username;
+  }
 
   std::int64_t ParticipantManager::getAngelOrMortalId(std::int64_t participantId, bool lookingForAngel) const {
     auto iter = m_participantsMap.find(participantId);

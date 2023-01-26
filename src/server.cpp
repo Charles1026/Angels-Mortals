@@ -6,10 +6,10 @@
 
 namespace AnM {
   BotServer::BotServer(const std::string& angelToken, const std::string& mortalToken, const std::string& pathToParticipantsJson, 
-      std::int64_t dataChannelId)
+      std::int64_t dataChannelId, std::int64_t groupId)
       : m_participantManager(std::make_shared<ParticipantManager>(pathToParticipantsJson)), 
-        m_angelBot(angelToken, true, m_participantManager, dataChannelId), 
-        m_mortalBot(mortalToken, false, m_participantManager, dataChannelId) {
+        m_angelBot(angelToken, true, m_participantManager, dataChannelId, groupId), 
+        m_mortalBot(mortalToken, false, m_participantManager, dataChannelId, groupId) {
 
     m_angelNormalCallback = [&](TgBot::Message::Ptr msgPtr){
       return m_mortalBot.sendMessageToRecipient(msgPtr);

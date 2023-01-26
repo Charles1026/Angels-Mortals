@@ -20,7 +20,8 @@ enum class SendMessageResponse {
 
 class TeleBot {
   public:
-    TeleBot(const std::string& token, bool isAngel, std::shared_ptr<ParticipantManager> participants, std::int64_t dataChannelId);
+    TeleBot(const std::string& token, bool isAngel, std::shared_ptr<ParticipantManager> participants, 
+        std::int64_t dataChannelId, std::int64_t groupId);
 
     void setForwardNormalMessageCallback(const std::function<SendMessageResponse(TgBot::Message::Ptr)>& callbackFn);
 
@@ -40,6 +41,7 @@ class TeleBot {
   private:
     const bool m_isAngel {true};
     const std::int64_t m_dataChannelId;
+    const std::int64_t m_groupId;
 
     TgBot::Bot m_bot;
     TgBot::TgLongPoll m_poller;
@@ -49,5 +51,6 @@ class TeleBot {
     std::function<void(TgBot::Message::Ptr)> m_normalMessageCallback;
     std::function<void(TgBot::Message::Ptr)> m_startCommandCallback;
     std::function<void(TgBot::Message::Ptr)> m_groupCommandCallback;
+    std::function<void(TgBot::Message::Ptr)> m_whoCommandCallback;
 };
 }
