@@ -43,7 +43,9 @@ void TeleBot::setForwardNormalMessageCallback(const std::function<SendMessageRes
     } 
     
     if (dataChannelHandlerResponse == SendMessageResponse::UNSUPPORTED_MESSAGE_FORMAT) {
-        respondToMessage(msgPtr, UNSUPPORTED_MESSAGE_FORMAT_RESPONSE);
+        // TODO: current implementation is wrong as it will respond in the channel, find a better way to notify UNSUPPORTED_MESSAGE_FORMAT
+        // from the reciepient bot to the channel to the sender bot.
+        // respondToMessage(msgPtr, UNSUPPORTED_MESSAGE_FORMAT_RESPONSE);
     }
   };
   m_bot.getEvents().onNonCommandMessage(m_normalMessageCallback);
