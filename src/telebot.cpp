@@ -199,7 +199,7 @@ SendMessageResponse TeleBot::handleDataChannelMessage(TgBot::Message::Ptr msgPtr
     auto contact = msgPtr->contact;
     api.sendContact(intendedChat, contact->phoneNumber, contact->firstName, contact->lastName, contact->vcard);
   } else {
-    SendMessageResponse::UNSUPPORTED_MESSAGE_FORMAT;
+    return SendMessageResponse::UNSUPPORTED_MESSAGE_FORMAT;
   }
   return SendMessageResponse::OK;
 }
