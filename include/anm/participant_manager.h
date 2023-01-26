@@ -12,7 +12,8 @@ namespace AnM {
 const inline std::int64_t PARTICIPANT_INVALID_VALUE = -1;
 struct Participant{
   std::int64_t id{PARTICIPANT_INVALID_VALUE};
-
+  std::string username{""};
+  
   std::int64_t angelId{PARTICIPANT_INVALID_VALUE};
   std::int64_t angelChatId{PARTICIPANT_INVALID_VALUE};
 

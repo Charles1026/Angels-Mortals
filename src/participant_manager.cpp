@@ -6,6 +6,7 @@
 
 namespace AnM {
 std::ostream& operator<<(std::ostream& os, const Participant& participant) {
+  os << "username: " << participant.username << '\n';
   os << "id: " << participant.id << '\n';
   os << "angelId: " << participant.angelId << '\n';
   os << "angelChatId: " << participant.angelChatId << '\n';
@@ -16,7 +17,7 @@ std::ostream& operator<<(std::ostream& os, const Participant& participant) {
 }
   
   
-  NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AnM::Participant, id, angelId, angelChatId, mortalId, mortalChatId, mortalUsername)
+  NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AnM::Participant, id, angelId, angelChatId, mortalId, mortalChatId, mortalUsername, username)
 
   void from_json(const nlohmann::json& json, AnM::ParticipantManager& manager) {
     for (auto& element : json) {

@@ -102,7 +102,10 @@ const inline std::string SENDING_MSG_IN_NON_DM_REPLY = "Error, please only commu
 
 bool TeleBot::ensureMessageIsPrivateMessage(TgBot::Message::Ptr msgPtr) {
   if (msgPtr->chat->type != TgBot::Chat::Type::Private) {
-    m_bot.getApi().sendMessage(msgPtr->chat->id, SENDING_MSG_IN_NON_DM_REPLY, false, msgPtr->messageId);
+    // only reply to non service messages
+    if (msgPtr->replyToMessage) {
+      m_bot.getApi().sendMessage(msgPtr->chat->id, SENDING_MSG_IN_NON_DM_REPLY, false, msgPtr->messageId);
+    }
     return false;
   }
   return true;
