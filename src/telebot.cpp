@@ -130,6 +130,8 @@ void TeleBot::setCommandMessageCallback() {
       auto video = originalMsgPtr->video;
       api.sendVideo(m_groupId, video->fileId, false, video->duration, video->width, 
           video->height, "", caption);
+    } else if (originalMsgPtr->videoNote) {
+      api.sendVideoNote(m_groupId, originalMsgPtr->videoNote->fileId);
     } else if (originalMsgPtr->voice) {
       api.sendVoice(m_groupId, originalMsgPtr->voice->fileId, caption);
     } else {
@@ -141,6 +143,7 @@ void TeleBot::setCommandMessageCallback() {
   m_bot.getEvents().onCommand(GROUP_COMMAND, m_groupCommandCallback);
 
   m_whoCommandCallback = [&](TgBot::Message::Ptr msgPtr){
+    if (!ensureMessageIsPrivateMessage(msgPtr)) return;
     if (m_isAngel) {
       respondToMessage(msgPtr, WHO_ANGEL_RESPONSE_MESSAGE);
       return;
@@ -155,10 +158,10 @@ const inline std::string SENDING_MSG_IN_NON_DM_REPLY = "Error, please only commu
 
 bool TeleBot::ensureMessageIsPrivateMessage(TgBot::Message::Ptr msgPtr) {
   if (msgPtr->chat->type != TgBot::Chat::Type::Private) {
-    // only reply to non service messages
-    if (msgPtr->replyToMessage) {
-      m_bot.getApi().sendMessage(msgPtr->chat->id, SENDING_MSG_IN_NON_DM_REPLY, false, msgPtr->messageId);
-    }
+    // // only reply to non service messages, removed because getting spam errors is not fun
+    // if (msgPtr->replyToMessage) {
+    //   m_bot.getApi().sendMessage(msgPtr->chat->id, SENDING_MSG_IN_NON_DM_REPLY, false, msgPtr->messageId);
+    // }
     return false;
   }
   return true;
@@ -195,6 +198,8 @@ SendMessageResponse TeleBot::handleDataChannelMessage(TgBot::Message::Ptr msgPtr
     auto video = msgPtr->video;
     api.sendVideo(intendedChat, video->fileId, false, video->duration, video->width, 
         video->height, "", caption);
+  } else if (msgPtr->videoNote) {
+      api.sendVideoNote(intendedChat, msgPtr->videoNote->fileId);
   } else if (msgPtr->voice) {
     api.sendVoice(intendedChat, msgPtr->voice->fileId, caption);
   } else if (msgPtr->contact) {
