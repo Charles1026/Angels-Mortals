@@ -57,7 +57,7 @@ SendMessageResponse TeleBot::sendMessageToRecipient(TgBot::Message::Ptr msgPtr) 
   TgBot::User::Ptr userPtr = msgPtr->from;
   std::int64_t userId = userPtr->id;
   std::int64_t recipientChatId = m_participants->getAngelOrMortalChatId(userId, !m_isAngel);
-  if (recipientChatId == PARTICIPANT_INVALID_VALUE) {
+  if (recipientChatId == PARTICIPANT_INVALID_NUMBER) {
     return SendMessageResponse::UNREGISTERED_RECIPIENT;
   }
 
@@ -83,7 +83,8 @@ const inline std::string GROUP_COMMAND = "group";
 const inline std::string WHO_COMMAND = "who";
 const inline std::string ERROR_STARTING_MESSAGE = "Error, please try again and contact House Comm if the problem persists.";
 const inline std::string SUCCESS_STARTING_MESSAGE = "Successfully started, you may now start messaging.";
-const inline std::string ERROR_SENDING_GROUP_MESSAGE = "Please reply to the message you want to send to the group.";
+const inline std::string GROUP_MESSAGE_NO_REPLY_ERROR = "Please reply to the message you want to send to the group.";
+const inline std::string GROUP_MESSAGE_REPLY_OTHERS_ERROR = "Please only reply to your own message.";
 const inline std::string SUCCESS_SENDING_GROUP_MESSAGE = "Successfully sent message to group.";
 const inline std::string WHO_ANGEL_RESPONSE_MESSAGE = "Whoops, you cant know your angel yet";
 const inline std::string WHO_MORTAL_RESPONSE_MESSAGE = "Your mortal is @";
@@ -107,12 +108,17 @@ void TeleBot::setCommandMessageCallback() {
   m_groupCommandCallback = [&](TgBot::Message::Ptr msgPtr){
     if (!ensureMessageIsPrivateMessage(msgPtr)) return;
     if (!msgPtr->replyToMessage) {
-      respondToMessage(msgPtr, ERROR_SENDING_GROUP_MESSAGE);
+      respondToMessage(msgPtr, GROUP_MESSAGE_NO_REPLY_ERROR);
       return;
     }
     auto originalMsgPtr = msgPtr->replyToMessage;
-    std::string recipient = m_participants->getAngelOrMortalUsername(msgPtr->from->id, m_isAngel);
-    std::string header = "@" + recipient + " your " + (m_isAngel ? "mortal" : "angel") + " has a message for you\n";
+    auto id = msgPtr->from->id;
+    if (id !=originalMsgPtr->from->id) {
+      respondToMessage(msgPtr, GROUP_MESSAGE_REPLY_OTHERS_ERROR);
+    }
+
+    std::string recipient = m_participants->getAngelOrMortalUsername(id, m_isAngel);
+    std::string header = "@" + recipient + " your " + (m_isAngel ? "mortal" : (m_participants->participantIsDevil(id) ? "devil" : "angel")) + " has a message for you\n";
     std::string caption = originalMsgPtr->caption.empty() ? header : header + originalMsgPtr->caption;
 
     TgBot::Api api = m_bot.getApi();

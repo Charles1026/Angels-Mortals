@@ -5,19 +5,21 @@
 #include <spdlog/spdlog.h>
 
 namespace AnM {
-std::ostream& operator<<(std::ostream& os, const Participant& participant) {
-  os << "username: " << participant.username << '\n';
-  os << "id: " << participant.id << '\n';
-  os << "angelId: " << participant.angelId << '\n';
-  os << "angelChatId: " << participant.angelChatId << '\n';
-  os << "mortalId: " << participant.mortalId << '\n';
-  os << "mortalChatId: " << participant.mortalChatId << '\n';
-  os << "mortalUsername: " << participant.mortalUsername;
-  return os;
-}
+  std::ostream& operator<<(std::ostream& os, const Participant& participant) {
+    os << participant.name << '\n';
+    os << "Here is some info about him/her" << '\n';
+    os << "\tTelegram Username: " << participant.username << '\n';
+    if (participant.isDevil) {
+      os << "\tRequested Prank Level: " << participant.prankLevel << '\n';
+    }
+    os << "\tRoom Number: " << participant.roomNumber << '\n';
+    os << "\tInterests: " << participant.interests << '\n';
+    os << "\tAdditional Notes: " << participant.notes << '\n';
+    return os;
+  }
   
   
-  NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AnM::Participant, id, username, angelId, angelChatId, mortalId, mortalChatId, mortalUsername)
+  NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(AnM::Participant, id, username, name, isDevil, prankLevel, roomNumber, interests, notes, angelId, angelChatId, mortalId, mortalChatId, mortalUsername)
 
   void from_json(const nlohmann::json& json, AnM::ParticipantManager& manager) {
     for (auto& element : json) {
@@ -52,8 +54,13 @@ std::ostream& operator<<(std::ostream& os, const Participant& participant) {
   }
 
   ParticipantManager::~ParticipantManager() {
+    saveData();
+  }
+
+  void ParticipantManager::saveData() {
     try {
       nlohmann::json jsonObject;
+      std::lock_guard<std::mutex> lock(m_participantMapMutex);
       to_json(jsonObject, *this);
       std::ofstream jsonFile(m_pathToParticipantsJson);
       jsonFile << std::setw(2) << jsonObject << std::endl;
@@ -69,6 +76,7 @@ std::ostream& operator<<(std::ostream& os, const Participant& participant) {
 
   bool ParticipantManager::addParticipant(Participant participant) {
     std::int64_t key = participant.id;
+    std::lock_guard<std::mutex> lock(m_participantMapMutex);
     if (m_participantsMap.find(key) != m_participantsMap.end()) {
       spdlog::warn("Warning, attempt to add duplicate participant {} ignored.", participant.id);
       return false;
@@ -79,6 +87,7 @@ std::ostream& operator<<(std::ostream& os, const Participant& participant) {
 
   bool ParticipantManager::setParticipantChatId(std::int64_t participantId, const std::string& username, std::int64_t chatId, 
       bool isAngelBot, const std::string& mortalUsername) {
+    std::lock_guard<std::mutex> lock(m_participantMapMutex);
     auto participantIter = m_participantsMap.find(participantId);
     if (participantIter == m_participantsMap.end()) {
       spdlog::warn("Warning, attempt to set participant chat Id of non-existing participant: {}", participantId);
@@ -98,10 +107,12 @@ std::ostream& operator<<(std::ostream& os, const Participant& participant) {
     } else {
       senderIter->second.angelChatId = chatId;
     }
+    saveData();
     return true;
   }
 
-  std::string ParticipantManager::getAngelOrMortalUsername(std::int64_t participantId, bool lookingForAngel) const {
+  std::string ParticipantManager::getAngelOrMortalUsername(std::int64_t participantId, bool lookingForAngel) {
+    std::lock_guard<std::mutex> lock(m_participantMapMutex);
     auto iter = m_participantsMap.find(participantId);
     if (iter == m_participantsMap.end()) {
       spdlog::warn("Cannot Find participant with id: {}", participantId);
@@ -117,7 +128,8 @@ std::ostream& operator<<(std::ostream& os, const Participant& participant) {
     return targetIter->second.username;
   }
 
-  std::int64_t ParticipantManager::getAngelOrMortalId(std::int64_t participantId, bool lookingForAngel) const {
+  std::int64_t ParticipantManager::getAngelOrMortalId(std::int64_t participantId, bool lookingForAngel) {
+    std::lock_guard<std::mutex> lock(m_participantMapMutex);
     auto iter = m_participantsMap.find(participantId);
     if (iter == m_participantsMap.end()) {
       spdlog::warn("Cannot Find participant with id: {}", participantId);
@@ -127,7 +139,8 @@ std::ostream& operator<<(std::ostream& os, const Participant& participant) {
     return lookingForAngel ? participant.angelId : participant.mortalId;
   }
 
-  std::int64_t ParticipantManager::getAngelOrMortalChatId(std::int64_t participantId, bool lookingForAngel) const {
+  std::int64_t ParticipantManager::getAngelOrMortalChatId(std::int64_t participantId, bool lookingForAngel) {
+    std::lock_guard<std::mutex> lock(m_participantMapMutex);
     auto iter = m_participantsMap.find(participantId);
     if (iter == m_participantsMap.end()) {
       spdlog::warn("Cannot Find participant with id: {}", participantId);
@@ -135,5 +148,15 @@ std::ostream& operator<<(std::ostream& os, const Participant& participant) {
     }
     Participant participant = iter->second;
     return lookingForAngel ? participant.angelChatId : participant.mortalChatId;
+  }
+
+  bool ParticipantManager::participantIsDevil(std::int64_t participantId) {
+    std::lock_guard<std::mutex> lock(m_participantMapMutex);
+      auto iter = m_participantsMap.find(participantId);
+      if (iter == m_participantsMap.end()) {
+        spdlog::warn("Cannot Find participant with id: {}", participantId);
+        return false;
+      }
+    return iter->second.isDevil;
   }
 }

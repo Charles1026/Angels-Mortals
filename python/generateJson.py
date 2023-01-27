@@ -15,18 +15,24 @@ def generateJson():
         
         # Generate Id
         for line in tsvList:
-            if len(line) != 2:
-                print("Error invalid length of row.")
+            if len(line) != 8:
+                print("Error row must be of size 8, see README for columns")
                 return -1
-            
+
             jsonList.append({
+                "username": line[0]
+                "id": int(line[1]),
+                "name": line[2],
+                "isDevil": bool(line[3]),
+                "prankLevel": int(line[4]),
+                "roomNumber": int(line[5]),
+                "interests": line[6],
+                "notes": line[7],
                 "angelChatId": -1,
                 "angelId": -1,
-                "id": int(line[1]),
                 "mortalChatId": -1,
                 "mortalId": -1,
                 "mortalUsername": "",
-                "username": line[0]
             })
 
         # Generate Angel Id
