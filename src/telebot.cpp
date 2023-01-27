@@ -24,6 +24,7 @@ TeleBot::TeleBot(const std::string& token, bool isAngel, std::shared_ptr<Partici
 
 const inline std::string UNREGISTERED_RECIPIENT_RESPONSE = "Error, trying to send message to a player who hasn't started the bot. Please wait a while and contact House Comm if this problem persists.";
 const inline std::string UNSUPPORTED_MESSAGE_FORMAT_RESPONSE = "Error, this message format is not supported currently. If you believe it should be, please contact House Comm.";
+const inline std::string UNSUPPORTED_MESSAGE_FORMAT_TO_RECIEPIENT_RESPONSE = "Error, you were sent an unsupported message type, please inform the sender.";
 
 void TeleBot::setForwardNormalMessageCallback(const std::function<SendMessageResponse(TgBot::Message::Ptr)>& callbackFn) {
   m_normalMessageCallback = [&](TgBot::Message::Ptr msgPtr){
@@ -41,9 +42,12 @@ void TeleBot::setForwardNormalMessageCallback(const std::function<SendMessageRes
       }
       return;
     } 
-    
-    if (dataChannelHandlerResponse == SendMessageResponse::UNSUPPORTED_MESSAGE_FORMAT) {
-        respondToMessage(msgPtr, UNSUPPORTED_MESSAGE_FORMAT_RESPONSE);
+
+    // TODO: current implementation is bad as it sends a message to the recipient, find a better way to notify UNSUPPORTED_MESSAGE_FORMAT
+    // from the reciepient bot to the channel to the sender bot.
+    if (dataChannelHandlerResponse == SendMessageResponse::UNSUPPORTED_MESSAGE_FORMAT && msgPtr->forwardFrom) {
+        m_bot.getApi().sendMessage(m_participants->getAngelOrMortalChatId(msgPtr->forwardFrom->id, !m_isAngel), 
+            UNSUPPORTED_MESSAGE_FORMAT_TO_RECIEPIENT_RESPONSE);
     }
   };
   m_bot.getEvents().onNonCommandMessage(m_normalMessageCallback);
@@ -176,6 +180,13 @@ SendMessageResponse TeleBot::handleDataChannelMessage(TgBot::Message::Ptr msgPtr
   if (msgPtr->chat->type != TgBot::Chat::Type::Channel || msgPtr->chat->id != m_dataChannelId) {
     return SendMessageResponse::NOT_DATACHANNEL_MESSAGE;
   }
+
+  // // Attempt at handling unsupported message types
+  // if (msgPtr->replyToMessage && !msgPtr->text.empty() && msgPtr->text == UNSUPPORTED_MESSAGE_FORMAT_RESPONSE) {
+  //   auto repliedToMessage = msgPtr->replyToMessage;
+  //   auto 
+  // }
+  
   // Only handle forwarded messages
   if (!msgPtr->forwardFrom) {
     return SendMessageResponse::OK;
@@ -206,7 +217,7 @@ SendMessageResponse TeleBot::handleDataChannelMessage(TgBot::Message::Ptr msgPtr
     auto contact = msgPtr->contact;
     api.sendContact(intendedChat, contact->phoneNumber, contact->firstName, contact->lastName, contact->vcard);
   } else {
-    SendMessageResponse::UNSUPPORTED_MESSAGE_FORMAT;
+    return SendMessageResponse::UNSUPPORTED_MESSAGE_FORMAT;
   }
   return SendMessageResponse::OK;
 }
