@@ -1,4 +1,5 @@
 # Build Folder
 build/
+__pycache__/
 *.json
 *.tsv
