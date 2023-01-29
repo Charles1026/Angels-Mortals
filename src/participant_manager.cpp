@@ -1,6 +1,7 @@
 #include "anm/participant_manager.h"
 #include <cstdint>
 #include <fstream>
+#include <sstream>
 
 #include <spdlog/spdlog.h>
 
@@ -8,7 +9,7 @@ namespace AnM {
   std::ostream& operator<<(std::ostream& os, const Participant& participant) {
     os << participant.name << '\n';
     os << "Here is some info about him/her" << '\n';
-    os << "\tTelegram Username: " << participant.username << '\n';
+    os << "\tTelegram Username: @" << participant.username << '\n';
     if (participant.isDevil) {
       os << "\tRequested Prank Level: " << participant.prankLevel << '\n';
     }
@@ -58,6 +59,7 @@ namespace AnM {
   }
 
   void ParticipantManager::saveData() {
+    spdlog::info("Saving Participant Data.");
     try {
       nlohmann::json jsonObject;
       std::lock_guard<std::mutex> lock(m_participantMapMutex);
@@ -87,25 +89,27 @@ namespace AnM {
 
   bool ParticipantManager::setParticipantChatId(std::int64_t participantId, const std::string& username, std::int64_t chatId, 
       bool isAngelBot, const std::string& mortalUsername) {
-    std::lock_guard<std::mutex> lock(m_participantMapMutex);
-    auto participantIter = m_participantsMap.find(participantId);
-    if (participantIter == m_participantsMap.end()) {
-      spdlog::warn("Warning, attempt to set participant chat Id of non-existing participant: {}", participantId);
-      return false;
-    }
-    Participant participant = participantIter->second;
-    participantIter->second.username = username;
-    std::int64_t senderId = isAngelBot ? participant.angelId : participant.mortalId;
-    auto senderIter = m_participantsMap.find(senderId);
-    if (senderIter == m_participantsMap.end()) {
-      spdlog::warn("Warning, attempt to set participant chat Id of non-existing sender: {}", senderId);
-      return false;
-    }
-    if (isAngelBot) {
-      senderIter->second.mortalChatId = chatId;
-      senderIter->second.mortalUsername = mortalUsername;
-    } else {
-      senderIter->second.angelChatId = chatId;
+    {
+      std::lock_guard<std::mutex> lock(m_participantMapMutex);
+      auto participantIter = m_participantsMap.find(participantId);
+      if (participantIter == m_participantsMap.end()) {
+        spdlog::warn("Warning, attempt to set participant chat Id of non-existing participant: {}", participantId);
+        return false;
+      }
+      Participant participant = participantIter->second;
+      participantIter->second.username = username;
+      std::int64_t senderId = isAngelBot ? participant.angelId : participant.mortalId;
+      auto senderIter = m_participantsMap.find(senderId);
+      if (senderIter == m_participantsMap.end()) {
+        spdlog::warn("Warning, attempt to set participant chat Id of non-existing sender: {}", senderId);
+        return false;
+      }
+      if (isAngelBot) {
+        senderIter->second.mortalChatId = chatId;
+        senderIter->second.mortalUsername = mortalUsername;
+      } else {
+        senderIter->second.angelChatId = chatId;
+      }
     }
     saveData();
     return true;
@@ -158,5 +162,18 @@ namespace AnM {
         return false;
       }
     return iter->second.isDevil;
+  }
+
+  std::string ParticipantManager::getParticipantToString(std::int64_t participantId) {
+    std::lock_guard<std::mutex> lock(m_participantMapMutex);
+      auto iter = m_participantsMap.find(participantId);
+      if (iter == m_participantsMap.end()) {
+        spdlog::warn("Cannot Find participant with id: {}", participantId);
+        return "";
+      }
+    std::ostringstream os;
+    os << iter->second;
+    std::string participantString = os.str();
+    return participantString;
   }
 }

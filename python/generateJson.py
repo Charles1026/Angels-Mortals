@@ -20,7 +20,7 @@ def generateJson():
                 return -1
 
             jsonList.append({
-                "username": line[0]
+                "username": line[0],
                 "id": int(line[1]),
                 "name": line[2],
                 "isDevil": bool(line[3]),

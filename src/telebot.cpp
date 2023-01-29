@@ -87,14 +87,13 @@ const inline std::string GROUP_MESSAGE_NO_REPLY_ERROR = "Please reply to the mes
 const inline std::string GROUP_MESSAGE_REPLY_OTHERS_ERROR = "Please only reply to your own message.";
 const inline std::string SUCCESS_SENDING_GROUP_MESSAGE = "Successfully sent message to group.";
 const inline std::string WHO_ANGEL_RESPONSE_MESSAGE = "Whoops, you cant know your angel yet";
-const inline std::string WHO_MORTAL_RESPONSE_MESSAGE = "Your mortal is @";
+const inline std::string WHO_MORTAL_RESPONSE_MESSAGE = "Your mortal is ";
 
 void TeleBot::setCommandMessageCallback() {
   m_startCommandCallback = [&](const TgBot::Message::Ptr& msgPtr){
     if (!ensureMessageIsPrivateMessage(msgPtr)) return;
     auto uid = msgPtr->from->id;
     auto username = msgPtr->from->username;
-    msgPtr->chat;
     auto chatId = msgPtr->chat->id;
     if (!m_participants->setParticipantChatId(uid, username, chatId, m_isAngel, m_isAngel ? msgPtr->from->username: "")) {
       respondToMessage(msgPtr, ERROR_STARTING_MESSAGE);
@@ -115,6 +114,7 @@ void TeleBot::setCommandMessageCallback() {
     auto id = msgPtr->from->id;
     if (id !=originalMsgPtr->from->id) {
       respondToMessage(msgPtr, GROUP_MESSAGE_REPLY_OTHERS_ERROR);
+      return;
     }
 
     std::string recipient = m_participants->getAngelOrMortalUsername(id, m_isAngel);
@@ -158,7 +158,8 @@ void TeleBot::setCommandMessageCallback() {
       respondToMessage(msgPtr, WHO_ANGEL_RESPONSE_MESSAGE);
       return;
     }
-    respondToMessage(msgPtr, WHO_MORTAL_RESPONSE_MESSAGE + m_participants->getAngelOrMortalUsername(msgPtr->from->id, m_isAngel));
+    auto recipientId = m_participants->getAngelOrMortalId(msgPtr->from->id, m_isAngel);
+    respondToMessage(msgPtr, WHO_MORTAL_RESPONSE_MESSAGE + m_participants->getParticipantToString(recipientId));
   };
   m_bot.getEvents().onCommand(WHO_COMMAND, m_whoCommandCallback);
 }

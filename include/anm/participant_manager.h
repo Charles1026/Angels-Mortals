@@ -59,6 +59,8 @@ class ParticipantManager {
 
     bool participantIsDevil(std::int64_t participantId);
 
+    std::string getParticipantToString(std::int64_t participantId);
+
     friend void to_json(nlohmann::json& json, AnM::ParticipantManager& manager);
 
   private:
