@@ -35,21 +35,22 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   
+  // Start Server
+  // TODO: Find a better way to stop as this waits for the long poll to end before finishing
   signal(SIGINT, termHandler);
-      // Start Server
-    while (keepRunning.load()) {
-      try {
-        AnM::BotServer server(jsonObject.at("angelToken"), jsonObject.at("mortalToken"), 
-            jsonObject.at("pathToParticipantsFile"), jsonObject.at("dataChannelId"), jsonObject.at("mainGroupId"));
-        server.startPolling();
-        while (keepRunning.load()) {
-          continue;
-        }
-      } catch (...) {
-        std::exception_ptr p = std::current_exception();
-        spdlog::error("Fatal exception encountered: {}. Restarting Server", p ? p.__cxa_exception_type()->name() : "null");
+  while (keepRunning.load()) {
+    try {
+      AnM::BotServer server(jsonObject.at("angelToken"), jsonObject.at("mortalToken"), 
+          jsonObject.at("pathToParticipantsFile"), jsonObject.at("dataChannelId"), jsonObject.at("mainGroupId"));
+      server.startPolling();
+      while (keepRunning.load()) {
+        continue;
       }
+    } catch (...) {
+      std::exception_ptr p = std::current_exception();
+      spdlog::error("Fatal exception encountered: {}. Restarting Server", p ? p.__cxa_exception_type()->name() : "null");
     }
+  }
   
   return 0;
 }
