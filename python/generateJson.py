@@ -23,7 +23,7 @@ def generateJson():
                 "username": line[0],
                 "id": int(line[1]),
                 "name": line[2],
-                "isDevil": bool(line[3]),
+                "isDevil": line[3].lower().capitalize() == "True",
                 "prankLevel": int(line[4]),
                 "roomNumber": int(line[5]),
                 "interests": line[6],
