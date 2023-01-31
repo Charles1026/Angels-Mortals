@@ -29,6 +29,8 @@ class TeleBot {
 
     void poll();
 
+    void skipUpdates(std::size_t numberOfUpdates);
+
   protected:
     void setCommandMessageCallback();
 

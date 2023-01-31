@@ -50,9 +50,11 @@ namespace AnM {
           m_angelBot.poll();
         } catch (TgBot::TgException e) {
           spdlog::error("Tg Exception Caught in Angel Bot: {}", e.what());
+          //skip the errenous update
+          m_angelBot.skipUpdates(1);
           continue;
         } catch (boost::wrapexcept<boost::system::system_error> e) {
-          spdlog::error("Bosst Exception Caught in Angel Bot: {}", e.what());
+          spdlog::error("Boost Exception Caught in Angel Bot: {}", e.what());
           continue;
         }
       }
@@ -65,6 +67,7 @@ namespace AnM {
           m_mortalBot.poll();
         } catch (TgBot::TgException e) {
           spdlog::error("Tg Exception Caught in Mortal Bot: {}", e.what());
+          m_mortalBot.skipUpdates(1);
           continue;
         } catch (boost::wrapexcept<boost::system::system_error> e) {
           spdlog::error("Bosst Exception Caught in Mortal Bot: {}", e.what());

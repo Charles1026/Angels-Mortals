@@ -9,14 +9,12 @@
 
 namespace AnM {
 
-constexpr std::int32_t OFFSET = 1000;
-constexpr std::int32_t TIMEOUT = 1;
+constexpr std::int32_t OFFSET = 2;
 
 TeleBot::TeleBot(const std::string& token, bool isAngel, std::shared_ptr<ParticipantManager> participants, 
     std::int64_t dataChannelId, std::int64_t groupId) 
     : m_isAngel(isAngel), m_bot(token), m_poller(m_bot), m_participants(participants), 
       m_dataChannelId(dataChannelId), m_groupId(groupId) {
-  m_bot.getApi().getUpdates(OFFSET, 100, TIMEOUT);
   spdlog::info("{} Bot cleared pending updates.", m_isAngel ? "Angel" : "Mortal");
   setCommandMessageCallback();
   spdlog::info("{} Bot commands callback set.", m_isAngel ? "Angel" : "Mortal");
@@ -78,6 +76,10 @@ void TeleBot::poll() {
   m_poller.start();
 }
 
+void TeleBot::skipUpdates(std::size_t numberOfUpdates) {
+  m_bot.getApi().getUpdates(OFFSET, numberOfUpdates);
+}
+
 const inline std::string START_COMMAND = "start";
 const inline std::string GROUP_COMMAND = "group";
 const inline std::string WHO_COMMAND = "who";
@@ -95,6 +97,7 @@ void TeleBot::setCommandMessageCallback() {
     auto uid = msgPtr->from->id;
     auto username = msgPtr->from->username;
     auto chatId = msgPtr->chat->id;
+
     if (!m_participants->setParticipantChatId(uid, username, chatId, m_isAngel, m_isAngel ? msgPtr->from->username: "")) {
       respondToMessage(msgPtr, ERROR_STARTING_MESSAGE);
       return;
@@ -179,7 +182,12 @@ bool TeleBot::ensureMessageIsPrivateMessage(TgBot::Message::Ptr msgPtr) {
 }
 
 void TeleBot::respondToMessage(const TgBot::Message::Ptr& msgPtr, const std::string& response) {
-  m_bot.getApi().sendMessage(msgPtr->chat->id, response, false, msgPtr->messageId);
+  // Catch original msg gone error
+  try {
+    m_bot.getApi().sendMessage(msgPtr->chat->id, response, false, msgPtr->messageId);
+  } catch (TgBot::TgException e) {
+    m_bot.getApi().sendMessage(msgPtr->chat->id, response);
+  }
 }
 
 SendMessageResponse TeleBot::handleDataChannelMessage(TgBot::Message::Ptr msgPtr) {

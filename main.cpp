@@ -12,7 +12,7 @@
 
 static std::atomic_bool keepRunning(true);
 
-const std::string CONFIG_FILE_PATH = "config.json";
+const std::string CONFIG_FILE_PATH = "../data/config.json";
 
 void termHandler(int dummy) {
   keepRunning.store(false);
