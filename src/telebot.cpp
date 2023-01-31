@@ -86,6 +86,7 @@ const inline std::string WHO_COMMAND = "who";
 const inline std::string ERROR_STARTING_MESSAGE = "Error, please try again and contact House Comm if the problem persists.";
 const inline std::string SUCCESS_STARTING_MESSAGE = "Successfully started, you may now start messaging.";
 const inline std::string GROUP_MESSAGE_NO_REPLY_ERROR = "Please reply to the message you want to send to the group.";
+const inline std::string GROUP_MESSAGE_ANGEL_BOT_ERROR = "Please do not use the group command with the angel bot, instead send your message directly to the group.";
 const inline std::string GROUP_MESSAGE_REPLY_OTHERS_ERROR = "Please only reply to your own message.";
 const inline std::string SUCCESS_SENDING_GROUP_MESSAGE = "Successfully sent message to group.";
 const inline std::string WHO_ANGEL_RESPONSE_MESSAGE = "Whoops, you cant know your angel yet";
@@ -109,6 +110,12 @@ void TeleBot::setCommandMessageCallback() {
 
   m_groupCommandCallback = [&](TgBot::Message::Ptr msgPtr){
     if (!ensureMessageIsPrivateMessage(msgPtr)) return;
+
+    if (m_isAngel) {
+      respondToMessage(msgPtr, GROUP_MESSAGE_ANGEL_BOT_ERROR);
+      return;
+    }
+
     if (!msgPtr->replyToMessage) {
       respondToMessage(msgPtr, GROUP_MESSAGE_NO_REPLY_ERROR);
       return;
