@@ -4,6 +4,11 @@
 
 #include <spdlog/spdlog.h>
 
+#include <tgbot/TgException.h>
+
+#include <boost/throw_exception.hpp>
+#include <boost/system/system_error.hpp>
+
 namespace AnM {
   BotServer::BotServer(const std::string& angelToken, const std::string& mortalToken, const std::string& pathToParticipantsJson, 
       std::int64_t dataChannelId, std::int64_t groupId)
@@ -41,14 +46,30 @@ namespace AnM {
     m_keepRunningAngel = true;
     m_angelThread = std::thread([&](){
       while (m_keepRunningAngel) {
-        m_angelBot.poll();
+        try {
+          m_angelBot.poll();
+        } catch (TgBot::TgException e) {
+          spdlog::error("Tg Exception Caught in Angel Bot: {}", e.what());
+          continue;
+        } catch (boost::wrapexcept<boost::system::system_error> e) {
+          spdlog::error("Bosst Exception Caught in Angel Bot: {}", e.what());
+          continue;
+        }
       }
     });
 
     m_keepRunningMortal = true;
     m_mortalThread = std::thread([&](){
       while (m_keepRunningMortal) {
-        m_mortalBot.poll();
+        try {
+          m_mortalBot.poll();
+        } catch (TgBot::TgException e) {
+          spdlog::error("Tg Exception Caught in Mortal Bot: {}", e.what());
+          continue;
+        } catch (boost::wrapexcept<boost::system::system_error> e) {
+          spdlog::error("Bosst Exception Caught in Mortal Bot: {}", e.what());
+          continue;
+        }
       }
     });
     spdlog::info("Both bots are now polling and ready to recieve messages.");

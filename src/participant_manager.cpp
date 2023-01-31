@@ -55,11 +55,12 @@ namespace AnM {
   }
 
   ParticipantManager::~ParticipantManager() {
+    spdlog::info("Saving Participant Data.");
     saveData();
   }
 
   void ParticipantManager::saveData() {
-    spdlog::info("Saving Participant Data.");
+    // spdlog::info("Saving Participant Data.");
     try {
       nlohmann::json jsonObject;
       std::lock_guard<std::mutex> lock(m_participantMapMutex);
@@ -67,7 +68,7 @@ namespace AnM {
       std::ofstream jsonFile(m_pathToParticipantsJson);
       jsonFile << std::setw(2) << jsonObject << std::endl;
       jsonFile.close();
-      spdlog::info("Participants list saved to file: {}", m_pathToParticipantsJson);
+      // spdlog::info("Participants list saved to file: {}", m_pathToParticipantsJson);
     } catch (const std::ifstream::failure& e) {
       spdlog::error("Error, failed to open participants json via path: {}\n with error:", m_pathToParticipantsJson, e.what());
     } catch (const nlohmann::json::exception& e) {

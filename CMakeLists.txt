@@ -3,6 +3,8 @@ include_guard(GLOBAL)
 project(angels_and_mortals)
 
 find_package(spdlog CONFIG REQUIRED)
+find_package(Boost REQUIRED COMPONENTS exception system)
+include_directories(${Boost_INCLUDE_DIRS}) 
 add_subdirectory(3rd-party/tgbot-cpp TgBot)
 add_subdirectory(3rd-party/json nlohmann_json)
 
@@ -54,27 +56,5 @@ PUBLIC
   strix::anm
   nlohmann_json::nlohmann_json
   spdlog::spdlog
-)
-
-
-
-add_executable(generate_pairings_exec
-  generate_pairings.cpp
-)
-
-include_directories(generate_pairings_exec
-PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-)
-
-target_compile_features(generate_pairings_exec
-PUBLIC
-  cxx_std_20
-)
-
-target_link_libraries(generate_pairings_exec
-PUBLIC
-  strix::anm
-  nlohmann_json::nlohmann_json
-  spdlog::spdlog
+  ${Boost_LIBRARIES}
 )
