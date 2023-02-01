@@ -178,11 +178,11 @@ void TeleBot::setCommandMessageCallback() {
 const inline std::string SENDING_MSG_IN_NON_DM_REPLY = "Error, please only communicate with this bot via private messages";
 
 bool TeleBot::ensureMessageIsPrivateMessage(TgBot::Message::Ptr msgPtr) {
+  // // To Find Chat Id of group
+  // if (msgPtr->chat->type == TgBot::Chat::Type::Supergroup || msgPtr->chat->type == TgBot::Chat::Type::Supergroup) {
+  //   spdlog::info(msgPtr->chat->id);
+  // }
   if (msgPtr->chat->type != TgBot::Chat::Type::Private) {
-    // // only reply to non service messages, removed because getting spam errors is not fun
-    // if (msgPtr->replyToMessage) {
-    //   m_bot.getApi().sendMessage(msgPtr->chat->id, SENDING_MSG_IN_NON_DM_REPLY, false, msgPtr->messageId);
-    // }
     return false;
   }
   return true;
